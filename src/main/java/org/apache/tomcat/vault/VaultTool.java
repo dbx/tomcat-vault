@@ -55,6 +55,7 @@ public class VaultTool {
     public static final String GENERATE_CONFIG_FILE = "generate-config";
     public static final String HELP_PARAM = "help";
     public static final String CRYPT = "encrypt";
+    public static final String DECRYPT = "decrypt";
 
     private static boolean skipSummary = false;
 
@@ -188,12 +189,14 @@ public class VaultTool {
         Option g = new Option("g", GENERATE_CONFIG_FILE, true, "Path for generated config file");
         Option h = new Option("h", HELP_PARAM, false, "Help");
         Option E = new Option("E", CRYPT, false, "Encrypt value using CRYPT feature");
+        Option D = new Option("D", DECRYPT, false, "Decrypt value using CRYPT feature (only with clear-text encryption passwords");
         og.addOption(x);
         og.addOption(c);
         og.addOption(r);
         og.addOption(g);
         og.addOption(h);
         og.addOption(E);
+        og.addOption(D);
         og.setRequired(true);
         options.addOptionGroup(og);
     }
@@ -227,6 +230,36 @@ public class VaultTool {
                 return 0;
             } else {
                 System.out.println("Arguments: encryption password, value to encrypt");
+                return 100;
+            }
+        }
+
+        if (cmdLine.hasOption(DECRYPT)) {
+            // Regardless of the return here, we do not need to print summary for this command option.
+            // Also, if we forget setting skipSummary, the nonInteractiveSession will cause an NPE since there is no vault.
+            skipSummary = true;
+            if (cmdLine.getArgs().length == 2) {
+                // Check to see if they tried to specify a VAULT value without a keystore :)
+                if (cmdLine.getArgs()[0].startsWith("VAULT::")) {
+                    System.out.println("You have specified a value stored in the vault, but this decryption mode is " +
+                                       "disabled for security reasons.");
+                    System.out.println("Please retry with a plain text value.");
+                    return 100;
+                }
+                if (!cmdLine.getArgs()[1].startsWith("CRYPT::")) {
+                    System.out.println("The encrypted value must start with CRYPT::");
+                    System.out.println("Please retry.");
+                    return 100;
+                }
+
+                BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
+                textEncryptor.setPassword(cmdLine.getArgs()[0]);
+                System.out.println(
+                        "Decrypted value: `" + textEncryptor.decrypt(cmdLine.getArgs()[1].substring("CRYPT::".length()))
+                        + "`");
+                return 0;
+            } else {
+                System.out.println("Arguments: encryption password, value to decrypt");
                 return 100;
             }
         }
