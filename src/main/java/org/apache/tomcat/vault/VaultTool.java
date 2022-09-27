@@ -255,8 +255,7 @@ public class VaultTool {
                 BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
                 textEncryptor.setPassword(cmdLine.getArgs()[0]);
                 System.out.println(
-                        "Decrypted value: `" + textEncryptor.decrypt(cmdLine.getArgs()[1].substring("CRYPT::".length()))
-                        + "`");
+                        "Decrypted value: " + textEncryptor.decrypt(cmdLine.getArgs()[1].substring("CRYPT::".length())));
                 return 0;
             } else {
                 System.out.println("Arguments: encryption password, value to decrypt");
