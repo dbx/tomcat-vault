@@ -12,7 +12,7 @@ See the [INSTALL](./INSTALL.md) file for instructions on installation and usage 
 
 Configure Tomcat to use your password from an encrypted or plain text string:
 
-- **Encrypted**: Add the encryption password to the vault:
+- **Encrypted**: Add the encryption password to the vault (if you created a vault):
 
     ~~~
     $ bin/vault.sh --keystore /path/to/vault.keystore --keystore-password my_password123 --alias my_vault --enc-dir /path/to/vault/encryption_dir/ --iteration 120 --salt 1234abcd --vault-block my_block --attribute my_encryption_password --sec-attr MyEncryptionPassword

@@ -91,20 +91,20 @@ public class PropertySourceVault implements PropertySource {
 
             // If properties is null then there was an exception
             if (properties == null) {
-                return;
+                log.debug("Failed to load vault options, not initializing vault");
+            } else {
+
+                Map<String, Object> options = new HashMap<String, Object>();
+                options.put(PicketBoxSecurityVault.KEYSTORE_URL, properties.getProperty("KEYSTORE_URL"));
+                options.put(PicketBoxSecurityVault.KEYSTORE_PASSWORD, properties.getProperty("KEYSTORE_PASSWORD"));
+                options.put(PicketBoxSecurityVault.KEYSTORE_ALIAS, properties.getProperty("KEYSTORE_ALIAS"));
+                options.put(PicketBoxSecurityVault.SALT, properties.getProperty("SALT"));
+                options.put(PicketBoxSecurityVault.ITERATION_COUNT, properties.getProperty("ITERATION_COUNT"));
+                options.put(PicketBoxSecurityVault.ENC_FILE_DIR, properties.getProperty("ENC_FILE_DIR"));
+
+                vault.init(options);
             }
-
-            Map<String, Object> options = new HashMap<String, Object>();
-            options.put(PicketBoxSecurityVault.KEYSTORE_URL, properties.getProperty("KEYSTORE_URL"));
-            options.put(PicketBoxSecurityVault.KEYSTORE_PASSWORD, properties.getProperty("KEYSTORE_PASSWORD"));
-            options.put(PicketBoxSecurityVault.KEYSTORE_ALIAS, properties.getProperty("KEYSTORE_ALIAS"));
-            options.put(PicketBoxSecurityVault.SALT, properties.getProperty("SALT"));
-            options.put(PicketBoxSecurityVault.ITERATION_COUNT, properties.getProperty("ITERATION_COUNT"));
-            options.put(PicketBoxSecurityVault.ENC_FILE_DIR, properties.getProperty("ENC_FILE_DIR"));
-
-            vault.init(options);
-
-            String passwordValue = properties.getProperty(ENCRYPTION_PASSWORD);
+            String passwordValue = properties == null ? null : properties.getProperty(ENCRYPTION_PASSWORD);
             String encryptionPassword = null;
             if (passwordValue != null) {
                 encryptionPassword = getProperty(passwordValue);
@@ -114,6 +114,8 @@ public class PropertySourceVault implements PropertySource {
             if (encryptionPassword != null) {
                 textEncryptor = new BasicTextEncryptor();
                 textEncryptor.setPassword(encryptionPassword);
+            } else {
+                log.warn("Could not create text encryptor, encryption password not set");
             }
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -122,28 +124,26 @@ public class PropertySourceVault implements PropertySource {
 
     @Override
     public String getProperty(String arg0) {
-        String result = null;
-
-        // If the vault failed to init, then return without change
-        if (!vault.isInitialized()) {
-            return arg0;
-        }
-
         if (arg0.startsWith(VAULT_PREFIX)) {
             String vaultdata[] = arg0.split("::");
             if (vaultdata.length == 3) {
                 if (vault.isInitialized()) {
                     try {
-                        result = new String(vault.retrieve(vaultdata[1], vaultdata[2], null));
+                        return new String(vault.retrieve(vaultdata[1], vaultdata[2], null));
                     } catch (SecurityVaultException e) {
                         log.error(e.getMessage(), e);
                     }
+                } else {
+                    log.error("Vault is not initialized, cannot retrieve value " + arg0);
                 }
             }
-        } else if (arg0.startsWith(CRYPT_PREFIX) && textEncryptor != null) {
-            result = textEncryptor.decrypt(arg0.substring(CRYPT_PREFIX.length()));
+        } else if (arg0.startsWith(CRYPT_PREFIX)) {
+            if (textEncryptor != null) {
+                return textEncryptor.decrypt(arg0.substring(CRYPT_PREFIX.length()));
+            } else {
+                log.error("Text encryptor not initialized, cannot decrypt value " + arg0);
+            }
         }
-        return result;
+        return null;
     }
-
 }

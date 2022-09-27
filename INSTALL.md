@@ -41,7 +41,11 @@ Building and Configuring Your Vault:
     org.apache.tomcat.util.digester.REPLACE_SYSTEM_PROPERTIES=true
     ~~~
 
-5. Setup your Vault using `./bin/vault.sh`. Here is an example creating a keystore for the Vault and initializing it in `/tmp/vault`:
+5. (Optional) Setup your Vault using `./bin/vault.sh`.
+
+    **Note:** If you skip this step you can still use [crypt](./Using_Crypt.md) feature in plain text mode. 
+    
+    Here is an example creating a keystore for the Vault and initializing it in `/tmp/vault`:
 
     ~~~
     # Make a directory for the Vault to live
@@ -53,7 +57,6 @@ Building and Configuring Your Vault:
     # Initialize the Vault and save vault.properties
     $ bin/vault.sh --keystore /tmp/vault/vault.keystore --keystore-password my_password123 --alias my_vault --enc-dir /tmp/vault/ --iteration 44 --salt 1234abcd -g $CATALINA_BASE/conf/vault.properties
     ~~~
-
     **Note:** When creating a keystore with keytool the storepass and keypass argument values must match.
 
     **Note:** You can also initialize the Vault in an interactive mode by executing bin/vault.sh with no arguments. If you do this, then you will need to create a file named vault.properties in `$CATALINA_BASE/conf` containing your Vault information as below (all of these keys must be defined and **NOT** empty). This information is provided by the interactive session at the end of the initialization.

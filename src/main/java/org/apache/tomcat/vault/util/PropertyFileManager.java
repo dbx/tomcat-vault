@@ -69,7 +69,7 @@ public class PropertyFileManager {
             // load a properties file
             prop.load(input);
         } catch (IOException ex) {
-            log.error(ex.getMessage(), ex);
+            log.error("Failed to load properties file: " + this.fname + "!");
             return null;
         } finally {
             if (input != null) {
